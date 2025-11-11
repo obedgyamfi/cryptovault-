@@ -34,3 +34,34 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Node modules
+/node_modules/
+
+# Hardhat artifacts & cache
+/artifacts/
+/cache/
+
+# Hardhat typechain-generated types
+/types/ethers-contracts/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Frontend build outputs (if using Next.js)
+frontend/.next/
+frontend/out/
+
+# Optional: package lock if you want reproducible builds only
+# package-lock.json

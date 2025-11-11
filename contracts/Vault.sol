@@ -1,63 +1,57 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 /**
- * @title Vault
- * @dev A simple vault contract for depositing and withdrawing ETH
- * @notice Users can deposit ETH and withdraw their balance
+ * @title CryptoVault
+ * @notice A simple ETH vault that lets users deposit, withdraw, and view balances.
+ * @dev Demonstrates secure Solidity patterns for beginner-to-intermediate developers.
  */
 contract Vault {
-    // Mapping to track user balances
-    mapping(address => uint256) public balances;
-    
-    // Events for tracking deposits and withdrawals
-    event Deposited(address indexed user, uint256 amount, uint256 newBalance);
-    event Withdrawn(address indexed user, uint256 amount, uint256 newBalance);
-    
+    mapping(address => uint256) private balances;
+
+    event Deposited(address indexed user, uint256 amount);
+    event Withdrawn(address indexed user, uint256 amount);
+
     /**
-     * @dev Deposit ETH into the vault
-     * @notice Sends ETH to the contract and updates the sender's balance
+     * @notice Deposit ETH into the vault.
+     * @dev Amount is automatically available via msg.value.
      */
     function deposit() external payable {
-        require(msg.value > 0, "Deposit amount must be greater than 0");
-        
+        require(msg.value > 0, "Deposit must be greater than 0");
+
         balances[msg.sender] += msg.value;
-        
-        emit Deposited(msg.sender, msg.value, balances[msg.sender]);
+        emit Deposited(msg.sender, msg.value);
     }
-    
+
     /**
-     * @dev Withdraw ETH from the vault
-     * @param amount The amount to withdraw in wei
-     * @notice Withdraws the specified amount and updates the sender's balance
+     * @notice Withdraw specified amount of ETH from the vault.
+     * @param amount The amount of ETH to withdraw.
      */
     function withdraw(uint256 amount) external {
-        require(amount > 0, "Withdrawal amount must be greater than 0");
-        require(balances[msg.sender] >= amount, "Insufficient balance");
-        
-        // Checks-effects-interactions pattern (prevents reentrancy)
-        balances[msg.sender] -= amount;
-        
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed");
-        
-        emit Withdrawn(msg.sender, amount, balances[msg.sender]);
+        uint256 userBalance = balances[msg.sender];
+        require(amount > 0, "Amount must be greater than 0");
+        require(userBalance >= amount, "Insufficient balance");
+
+        // Checks-Effects-Interactions pattern
+        balances[msg.sender] = userBalance - amount;
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "ETH transfer failed");
+
+        emit Withdrawn(msg.sender, amount);
     }
-    
+
     /**
-     * @dev Get the balance of a specific user
-     * @param user The address to query
-     * @return The user's balance in wei
+     * @notice Returns the balance of a user.
+     * @param user Address to query balance for.
      */
     function getBalance(address user) external view returns (uint256) {
         return balances[user];
     }
-    
+
     /**
-     * @dev Get the total ETH held by the contract
-     * @return The contract's total balance in wei
+     * @notice Returns the total ETH held by the vault.
      */
-    function getTotalBalance() external view returns (uint256) {
+    function getVaultBalance() external view returns (uint256) {
         return address(this).balance;
     }
 }
