@@ -1,12 +1,13 @@
-import {ethers} from "hardhat";
+import {network} from "hardhat";
 
 async function  main() {
-    const Vault = await ethers.getContractFactory("Vault");
-    const vault = await Vault.deploy();
+    const { ethers } =  await network.connect("sepolia"); 
 
+    const vault = await ethers.deployContract("Vault");
     await vault.waitForDeployment();
 
     const address = await vault.getAddress();
+    console.log("Vault deployed at: ", await vault.getAddress());
 }
 
 main().catch((error) => {
