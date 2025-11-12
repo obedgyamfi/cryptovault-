@@ -1,21 +1,30 @@
-import { createConfig, http } from "wagmi";
-import { sepolia } from "wagmi/chains";
-import { coinbaseWallet, injected, walletConnect } from "wagmi/connectors";
+import { createConfig, http } from 'wagmi'
+import { defineChain } from 'viem';
+// import { sepolia } from 'wagmi/chains'
 
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
-const sepoliaRpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
+// export const config = createConfig({
+//   chains: [sepolia],
+//   transports: {
+//     [sepolia.id]: http(),
+//   },
+// })
 
-const connectors = [
-  injected({ shimDisconnect: true }),
-  coinbaseWallet({ appName: "CryptoVault" }),
-  ...(walletConnectProjectId ? [walletConnect({ projectId: walletConnectProjectId })] : []),
-];
 
+export const localhostChain = defineChain({
+  id: 31337,
+  name: 'localhost',
+  network: 'localhost',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['http://127.0.0.1:8545'] }, // ✅ must be { http: string[] }
+  },
+  blockExplorers: { default: { name: 'none', url: '' } },
+});
+
+// 2️⃣ Create the Wagmi config using the local chain
 export const config = createConfig({
-  chains: [sepolia],
-  connectors,
-  ssr: true,
+  chains: [localhostChain],
   transports: {
-    [sepolia.id]: http(sepoliaRpcUrl),
+    [localhostChain.id]: http(localhostChain.rpcUrls.default.http[0]),
   },
 });
