@@ -1,7 +1,7 @@
 import {network} from "hardhat";
 
 async function  main() {
-    const { ethers } =  await network.connect("sepolia"); 
+    const { ethers } =  await network.connect("localhost"); 
 
     const vault = await ethers.deployContract("Vault");
     await vault.waitForDeployment();
