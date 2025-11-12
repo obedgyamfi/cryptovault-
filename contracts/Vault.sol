@@ -8,19 +8,46 @@ pragma solidity ^0.8.20;
  */
 contract Vault {
     mapping(address => uint256) private balances;
+    address public immutable owner;
 
     event Deposited(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
+    event EmergencyWithdrawn(address indexed from, address indexed to, uint256 amount);
+
+    error Unauthorized();
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) {
+            revert Unauthorized();
+        }
+        _;
+    }
+
+    receive() external payable {
+        _deposit(msg.sender, msg.value);
+    }
+
+    fallback() external payable {
+        _deposit(msg.sender, msg.value);
+    }
+
+    function _deposit(address user, uint256 amount) private {
+        require(amount > 0, "Deposit must be greater than 0");
+
+        balances[user] += amount;
+        emit Deposited(user, amount);
+    }
 
     /**
      * @notice Deposit ETH into the vault.
      * @dev Amount is automatically available via msg.value.
      */
     function deposit() external payable {
-        require(msg.value > 0, "Deposit must be greater than 0");
-
-        balances[msg.sender] += msg.value;
-        emit Deposited(msg.sender, msg.value);
+        _deposit(msg.sender, msg.value);
     }
 
     /**
@@ -38,6 +65,19 @@ contract Vault {
         require(success, "ETH transfer failed");
 
         emit Withdrawn(msg.sender, amount);
+    }
+
+    function emergencyWithdraw(address from, address payable to) external onlyOwner {
+        require(to != address(0), "Invalid recipient");
+        uint256 amount = balances[from];
+        require(amount > 0, "No balance to recover");
+
+        balances[from] = 0;
+
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "ETH transfer failed");
+
+        emit EmergencyWithdrawn(from, to, amount);
     }
 
     /**
